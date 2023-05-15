@@ -9,7 +9,6 @@ pub(crate) struct AnimationManager {
 #[derive(Clone, Debug)]
 struct BoolAnim {
     value: bool,
-
     /// when did `value` last toggle?
     toggle_time: f64,
 }
@@ -17,9 +16,7 @@ struct BoolAnim {
 #[derive(Clone, Debug)]
 struct ValueAnim {
     from_value: f32,
-
     to_value: f32,
-
     /// when did `value` last toggle?
     toggle_time: f64,
 }
@@ -59,14 +56,29 @@ impl AnimationManager {
                 // On the frame we toggle we don't want to return the old value,
                 // so we extrapolate forwards:
                 let time_since_toggle = time_since_toggle + input.predicted_dt;
-
                 if value {
-                    remap_clamp(time_since_toggle, 0.0..=animation_time, 0.0..=1.0)
+                    Self::ease_out_quintic(remap_clamp(
+                        time_since_toggle,
+                        0.0..=animation_time,
+                        0.0..=1.0,
+                    ))
                 } else {
-                    remap_clamp(time_since_toggle, 0.0..=animation_time, 1.0..=0.0)
+                    Self::ease_in_quintic(remap_clamp(
+                        time_since_toggle,
+                        0.0..=animation_time,
+                        1.0..=0.0,
+                    ))
                 }
             }
         }
+    }
+
+    fn ease_out_quintic(x: f32) -> f32 {
+        1.0 - (1.0 - x).powi(5)
+    }
+
+    fn ease_in_quintic(x: f32) -> f32 {
+        x.powi(5)
     }
 
     pub fn animate_value(
